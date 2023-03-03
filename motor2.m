@@ -25,15 +25,13 @@ Rfe = 1603.46;
 Lu = 0.515;
 n1 = 3000;
 n = 2860;
-s0 = 0.98;
+s0 = 1 - 0.98;
 Vp = 380;
 
 tc = Lu*i1/Vp;
 
 tau = D.t(1:end-1)/tc;
 V = D.v1;
-
-figure, plot(tau, V)
 
 %% Initial conditions and parameters
 Lambda1 = L1/Lu;
@@ -46,10 +44,28 @@ rho = R2/R1;
 xi1 = -1;
 xi2 = 1;
 
+% Numerical solution using an RK4/5 method
 F = ode45(@(t,y) motorODE(t, y, alpha, beta, nu, rho, s0, V, tau),...
     tau, [xi1 xi2]);
 
-figure, plot(F.x*tc, F.y*i1)
+%% Plots
+if exist('figs', 'dir') == 0
+    mkdir('figs');
+end
+
+figure,
+plot(tau, V)
+xlabel('$t$ (s)')
+ylabel('$V_1$ (V)')
+saveas(gcf, './figs/V1_vs_t', 'jpg')
+
+figure,
+plot(F.x*tc, F.y*i1)
+legend('$i_1$', '$i_2$')
+xlabel('$t$ (s)')
+ylabel('$I$ (A)')
+saveas(gcf, './figs/I_vs_t', 'jpg')
+
 
 
 
