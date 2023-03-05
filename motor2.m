@@ -31,22 +31,28 @@ tc = Lu*i1/Vp;
 tt = D.t/tc;
 V = D.v1;
 
-N = 5;
+N = 10;
 V = repmat(V, [N, 1]);
 tt = linspace(tt(1), N*tt(end), length(V))';
 
-%% Initial conditions and parameters
+% The prescribed voltage signal can be replaced by
+% Vp*sin(2*pi*f*tt*tc).
+% It might be useful to compute the permanent state solution analytically.
+
+%% Initial conditions and dimensionless parameters
 Lambda1 = L1/Lu;
 Lambda2 = L2/Lu;
 alpha = 1 + Lambda1;
 beta = 1 + Lambda2;
 nu = i1*R1/Vp;
 rho = R2/R1;
-p = 3;
+p = 1;
 ns = 60*f/p;
 Tc = (2*pi*ns/60)/(Vp*i1);
-Tr = 5e3/Tc;
-ji = 3e6;
+
+% Play around with ji and Tr
+ji = 2e6;
+Tr = 3e4;
 
 xi1 = -1;
 xi2 = 1;
@@ -75,7 +81,7 @@ if exist('figs', 'dir') == 0
 end
 
 figure,
-plot(tt*tc, V*Vp)
+plot(tt*tc, V*Vp, tt*tc, Vp*sin(2*pi*f*tt*tc))
 xlabel('$t$ (s)')
 ylabel('$V_1$ (V)')
 saveas(gcf, './figs/V1_vs_t', 'jpg')
@@ -95,12 +101,9 @@ ylabel('$T$ (Nm)')
 saveas(gcf, './figs/T_vs_t', 'jpg')
 
 figure,
-subplot(211), plot(tau*tc, s)
-% xlabel('$t$ (s)')
+subplot(211), plot(tau*tc, s, tau*tc, s*0, '--')
 ylabel('$s$')
-% saveas(gcf, './figs/s_vs_t', 'jpg')
-
-subplot(212), plot(tau*tc, nr)
+subplot(212), plot(tau*tc, nr, tau*tc, nr*0 + ns, '--')
 xlabel('$t$ (s)')
 ylabel('$n_r$ (rpm)')
 saveas(gcf, './figs/s_nr_vs_t', 'jpg')
