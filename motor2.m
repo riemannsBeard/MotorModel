@@ -14,9 +14,9 @@ set(0, 'defaultLegendInterpreter', 'Latex')
 %% Data
 D = load('datos.mat');
 
-i1 = 0.5;
+i1 = 10*0.5;
 f = 50;
-R1 = 1;
+R1 = 2;
 L1 = 0.011;
 R2 = 2;
 L2 = 0.013;
@@ -25,34 +25,37 @@ Lu = 0.515;
 n1 = 3000;
 n = 2860;
 Vp = 380;
+p = 1;
+ns = 60*f/p;
 
-tc = Lu*i1/Vp;
+% Internal mechanical torque (N m)
+Mc = 3*R2*i1^2/(2*pi*ns/60);
+% Moment of inertia (kg m^2)
+J = 0.02;
+
+% Nondimensional resistive torque (Tr/Mmi)
+Mr = 0.125;
+% Caracteristic (starting) time
+tc = J*2*pi/60*ns/(Mc*(1 - Mr));
 
 tt = D.t/tc;
 V = D.v1;
 
-N = 10;
+N = 15;
 V = repmat(V, [N, 1]);
 tt = linspace(tt(1), N*tt(end), length(V))';
 
 % The prescribed voltage signal can be replaced by
-% Vp*sin(2*pi*f*tt*tc).
+% V = Vp*cos(2*pi*f*tt*tc);
 % It might be useful to compute the permanent state solution analytically.
 
 %% Initial conditions and dimensionless parameters
-Lambda1 = L1/Lu;
-Lambda2 = L2/Lu;
-alpha = 1 + Lambda1;
-beta = 1 + Lambda2;
+alpha = (L1 + Lu)*i1/Vp/tc;
+beta = Lu*i1/Vp/tc;
+gamma = (L2 + Lu)*i1/Vp/tc;
+
 nu = i1*R1/Vp;
 rho = R2/R1;
-p = 1;
-ns = 60*f/p;
-Tc = (2*pi*ns/60)/(Vp*i1);
-
-% Play around with ji and Tr
-ji = 2e6;
-Tr = 3e4;
 
 xi1 = -1;
 xi2 = 1;
@@ -61,7 +64,10 @@ s0 = 1;
 %% Solution
 
 % Numerical solution using an RK4/5 method
-F = ode23s(@(t,y) motorODE(t, y, alpha, beta, nu, rho, Tr, ji, V, tt),...
+% F = ode23s(@(t,y) motorODE(t, y, alpha, beta, nu, rho, Mr, ji, V, tt),...
+%     tt, [xi1 xi2 s0]);
+
+F = ode23s(@(t,y) motorODE2(t, y, alpha, beta, gamma, nu, rho, Mr, V, tt),...
     tt, [xi1 xi2 s0]);
 
 tau = F.x';
@@ -94,7 +100,7 @@ ylabel('$I$ (A)')
 saveas(gcf, './figs/I_vs_t', 'jpg')
 
 figure,
-plot(tau*tc, T*Tc, '-', tau*tc, T*0 + Tr*Tc, '--')
+plot(tau*tc, T*Mc, '-', tau*tc, T*0 + Mr*Mc, '--')
 legend('$T_i$', '$T_r$')
 xlabel('$t$ (s)')
 ylabel('$T$ (Nm)')
